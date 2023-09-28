@@ -3,7 +3,10 @@ import argparse
 def finetunr_lora(prompt, imgFilepath, configFilepath):
     """
     This function finetunes the number of lora model based on the number of Json config files given. 
-        1. makes files structure 
+        1. makes files structure out of image fold
+        2. do auto caption if need be
+        3. loop through json files
+            3.1. for each one run the training command for the lora
     """
     #use clip function to get subset
     image_set = clip_func(prompt, imgFilepath)
