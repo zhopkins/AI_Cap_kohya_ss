@@ -2,22 +2,22 @@ import argparse
 from PIL import Image
 import subprocess
 import json
-from lora_gui import train_model
+#from lora_gui import train_model
 import os
 import pathlib
 
 
 def finetuner_lora(prompt, imgFilepath, configFilepath):
     #get all the json files
-    json_list = [f for f in pathlib.Path().iterdir() if f.is_file()]
+    json_list = [f for f in pathlib.Path(configFilepath).iterdir() if f.is_file()]
     print('Found {} config files: {}'.format(len(json_list), json_list))
-    
     
     #run each lora training
     for filename in json_list:
         with open(filename,'r') as f:
             new_config = json.load(f)
-
+            print(new_config)
+            print()
 
             # train_model(
             # headless,
