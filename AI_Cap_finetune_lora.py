@@ -1,8 +1,8 @@
 import argparse
 from PIL import Image
-#from lora_gui import train_model
 import os
 import pathlib
+import time
 
 import gradio as gr
 import json
@@ -25,18 +25,9 @@ from library.common_gui import (
     save_to_file,
     check_duplicate_filenames,
 )
-from library.class_configuration_file import ConfigurationFile
-from library.class_source_model import SourceModel
-from library.class_basic_training import BasicTraining
-from library.class_advanced_training import AdvancedTraining
-from library.class_sdxl_parameters import SDXLParameters
-from library.class_folders import Folders
+
 from library.class_command_executor import CommandExecutor
-from library.tensorboard_gui import (
-    gradio_tensorboard,
-    start_tensorboard,
-    stop_tensorboard,
-)
+
 from library.utilities import utilities_tab
 from library.class_sample_images import SampleImages, run_cmd_sample
 from library.class_lora_tab import LoRATools
@@ -55,7 +46,14 @@ log = setup_logging()
 # Setup command executor
 executor = CommandExecutor()
 
-def finetuner_lora(prompt, imgFilepath, configFilepath):
+#
+def train_lora(prompt, imgFilepath):
+    
+
+    pass
+    
+
+def lora_loop(imgFilepath, configFilepath):
     #get all the json files
     json_list = [f for f in pathlib.Path(configFilepath).iterdir() if f.is_file()]
     print('Found {} config files: {}'.format(len(json_list), json_list))
@@ -74,7 +72,7 @@ def finetuner_lora(prompt, imgFilepath, configFilepath):
             v_parameterization=new_config['v_parameterization'],
             sdxl='',
             logging_dir=new_config['logging_dir'],
-            train_data_dir=new_config['train_data_dir'],
+            train_data_dir=imgFilepath, ##Need to test if file path exists
             reg_data_dir=new_config['reg_data_dir'],
             output_dir=new_config['output_dir'],
             max_resolution=new_config['max_resolution'],
@@ -182,7 +180,7 @@ def finetuner_lora(prompt, imgFilepath, configFilepath):
             max_timestep=new_config['max_timestep'],
             )
 
-
+###This function is from Koyass with a few edits to pop out the training 
 def popout_train_model(
     headless,
     print_only,
@@ -488,7 +486,7 @@ def popout_train_model(
 
     lr_warmup_steps = round(float(int(lr_warmup) * int(max_train_steps) / 100))
     log.info(f'lr_warmup_steps = {lr_warmup_steps}')
-
+    ##Added start cmd /k to give it's own 
     run_cmd = f'start cmd /k accelerate launch --num_cpu_threads_per_process={num_cpu_threads_per_process}'
     if sdxl:
         run_cmd += f' "./sdxl_train_network.py"'
@@ -839,6 +837,15 @@ def popout_train_model(
         # Run the command
         executor.execute_command(run_cmd=run_cmd)
 
+        while True:
+            if executor.process.communicate()[0] == 0:
+                break
+            elif executor.process.communicate()[0] > 0:
+                print("The Traning has failed with this code :", executor.process.communicate()[0])
+                break
+            else:
+                time.sleep(60)
+
         # # check if output_dir/last is a folder... therefore it is a diffuser model
         # last_dir = pathlib.Path(f'{output_dir}/{output_name}')
 
@@ -860,18 +867,64 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '-i',
-        '--imgFilepath',
+        '--img_Filepath',
         type=str,
         help='The file path too the folder of images'
     )
 
     parser.add_argument(
         '-c',
-        '--configFilepath',
+        '--config_Filepath',
         type=str,
+        default=None,
         help='The file path too the folder of config files'
     )
+
+    parser.add_argument(
+        '-lr',
+        '--learning_rate',
+        type=str,
+        default=1e-05,
+        help='Starting Learning rate'
+    )
+    
+    """
+    List of inputs to still go through
+    --enable_bucket 
+    --min_bucket_reso=256
+    --max_bucket_reso=2048
+    --pretrained_model_name_or_path="runwayml/stable-diffusion-v1-5"
+    --train_data_dir="G:/AICapstone/test_files/jojo_stone_ocean_40_imgs/lora/img/sample"
+    --resolution="512,512" 
+    --output_dir="G:/AICapstone/test_files/jojo_stone_ocean_40_imgs/lora/img" 
+    --network_alpha="1" 
+    --save_model_as=safetensors 
+    --network_module=networks.lora 
+    --text_encoder_lr=5e-05 
+    --unet_lr=0.0001 
+    --network_dim=8 
+    --output_name="last" 
+    --lr_scheduler_num_cycles="1" 
+    --no_half_vae 
+    --learning_rate="0.0001" 
+    --lr_scheduler="cosine" 
+    --train_batch_size="1" 
+    --save_every_n_epochs="1" 
+    --mixed_precision="fp16" 
+    --save_precision="fp16" 
+    --cache_latents 
+    --optimizer_type="AdamW8bit" 
+    --max_data_loader_n_workers="0" 
+    --bucket_reso_steps=64 
+    --xformers 
+    --bucket_no_upscale 
+    --noise_offset=0.0
+    """
     args = parser.parse_args()
-    finetuner_lora(args.prompt, args.imgFilepath, args.configFilepath)
+
+    if args.configFilepath != None:
+        lora_loop(args.imgFilepath, args.configFilepath)
+    else:
+        train_lora(args.prompt, args.imgFilepath)
 
     
