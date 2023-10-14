@@ -59,6 +59,7 @@ def create_configs(args_dic):
         for key in args_dic.keys():
             new_config[key] = args_dic[key]
         
+        
         config_list.append(new_config)
 
 
@@ -68,7 +69,7 @@ def create_configs(args_dic):
 
     
     
-def get_configs(imgFilepath, output_dir, configFilepath):
+def get_configs(imgFilepath, output_dir, logging_dir, configFilepath):
     #get all the json files
     json_list = [f for f in pathlib.Path(configFilepath).iterdir() if f.is_file()]
     print('Found {} config files: {}'.format(len(json_list), json_list))
@@ -78,6 +79,7 @@ def get_configs(imgFilepath, output_dir, configFilepath):
             new_config = json.load(f)
             new_config['train_data_dir'] = imgFilepath
             new_config['output_dir'] = output_dir
+            new_config['logging_dir'] = logging_dir
             config_list.append(new_config)
     #takes the configs through the loops
     return config_list
@@ -516,8 +518,8 @@ def popout_train_model(
 
     lr_warmup_steps = round(float(int(lr_warmup) * int(max_train_steps) / 100))
     log.info(f'lr_warmup_steps = {lr_warmup_steps}')
-    ##Added start cmd /k to give it's own 
-    run_cmd = f'start cmd /k accelerate launch --num_cpu_threads_per_process={num_cpu_threads_per_process}'
+    ##Added "start cmd /k" to give it's own 
+    run_cmd = f'accelerate launch --num_cpu_threads_per_process={num_cpu_threads_per_process}'
     if sdxl:
         run_cmd += f' "./sdxl_train_network.py"'
     else:
@@ -866,15 +868,11 @@ def popout_train_model(
         log.info(run_cmd)
         # Run the command
         executor.execute_command(run_cmd=run_cmd)
-
-        while True:
-            if executor.process.communicate()[0] == None:
-                time.sleep(60)
-            elif executor.process.communicate()[0] == 0:
-                break
-            elif executor.process.communicate()[0] > 0:
-                print("The Traning has failed with this code :", executor.process.communicate()[0])
-                break
+        ##Added logic to check if the process ran 
+        status = executor.process.wait()
+        _, errs = executor.process.communicate()
+        print("The Training exit code:", errs)
+            
 
         # # check if output_dir/last is a folder... therefore it is a diffuser model
         # last_dir = pathlib.Path(f'{output_dir}/{output_name}')
@@ -895,6 +893,7 @@ if __name__ == '__main__':
         help='The prompt of the focus for the finetuning'
     )
 
+    #where the images are stored (has to be in the "lora\img" structure)
     parser.add_argument(
         '-i',
         '--img_Filepath',
@@ -910,6 +909,13 @@ if __name__ == '__main__':
     )
 
     parser.add_argument(
+        '-l',
+        '--logging_dir',
+        type=str,
+        help='The output path for the logging file'
+    )
+    #a folder of json files that have configurations in them
+    parser.add_argument(
         '-c',
         '--config_Filepath',
         type=str,
@@ -917,13 +923,41 @@ if __name__ == '__main__':
         help='The file path too the folder of config files'
     )
 
+    #Name for the models
+    parser.add_argument(
+        '-m',
+        '--output_name',
+        type=str,
+        default='New_model',
+        help='The prompt of the focus for the finetuning'
+    )
+
+    ##Learning Rate Inputs
     parser.add_argument(
         '-lr',
         '--learning_rate',
-        type=str,
+        type=float,
         default=1e-05,
         help='Starting Learning rate'
     )
+
+    parser.add_argument(
+        '-lr_stop',
+        '--learning_rate_stop',
+        type=float,
+        default=1e-05,
+        help='Stopping place for learning rate'
+    )
+
+    parser.add_argument(
+        '-lr_step',
+        '--learning_rate_step',
+        type=float,
+        default=0,
+        help='Stopping place for learning rate'
+    )
+
+    ##
 
     """
     List of inputs to still go through
@@ -931,9 +965,9 @@ if __name__ == '__main__':
     --min_bucket_reso=256
     --max_bucket_reso=2048
     --pretrained_model_name_or_path="runwayml/stable-diffusion-v1-5"
-    --train_data_dir="G:/AICapstone/test_files/jojo_stone_ocean_40_imgs/lora/img/sample"
+    DONE--train_data_dir="G:/AICapstone/test_files/jojo_stone_ocean_40_imgs/lora/img/sample"
     --resolution="512,512" 
-    --output_dir="G:/AICapstone/test_files/jojo_stone_ocean_40_imgs/lora/img" 
+    DONE--output_dir="G:/AICapstone/test_files/jojo_stone_ocean_40_imgs/lora/img" 
     --network_alpha="1" 
     --save_model_as=safetensors 
     --network_module=networks.lora 
@@ -960,7 +994,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     config_list = []
     if args.config_Filepath != None:
-        config_list = get_configs(args.img_Filepath, args.output_dir, args.config_Filepath)
+        config_list = get_configs(args.img_Filepath, args.output_dir, args.logging_dir, args.config_Filepath)
     else:
         config_list = create_configs(vars(args))
 
