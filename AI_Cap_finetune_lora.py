@@ -1,10 +1,8 @@
 import argparse
-from PIL import Image
 import os
 import pathlib
-import time
+import itertools 
 
-import gradio as gr
 import json
 import math
 import os
@@ -46,21 +44,66 @@ log = setup_logging()
 # Setup command executor
 executor = CommandExecutor()
 
+def floating_point_range(start, stop, step):
+    range_list = [start]
+    new_num = range_list[-1] + step
+    while new_num < stop:
+        range_list.append(new_num)
+        new_num = range_list[-1] + step
+    return range_list
+
 
 def create_configs(args_dic):
     """
     This function taks in a dictionary of arguments and create a list of configuerations for loar training.
     """
     config_list = []
+
+    #makes that list of variables desired
+    #this is for learning Rate
+    lr_list = floating_point_range(args_dic["learning_rate"], args_dic["learning_rate_stop"], args_dic["learning_rate_step"])
+    #This is for Optimizer
+    opt_choices=[
+                    'AdamW',
+                    'AdamW8bit',
+                    'Adafactor',
+                    'DAdaptation',
+                    'DAdaptAdaGrad',
+                    'DAdaptAdam',
+                    'DAdaptAdan',
+                    'DAdaptAdanIP',
+                    'DAdaptAdamPreprint',
+                    'DAdaptLion',
+                    'DAdaptSGD',
+                    'Lion',
+                    'Lion8bit',
+                    'PagedAdamW8bit',
+                    'PagedLion8bit',
+                    'Prodigy',
+                    'SGDNesterov',
+                    'SGDNesterov8bit',
+                ]
+    opt_list = [opt for opt in args_dic["optimizer_type"].replace(' ', '').split(',') if opt in opt_choices]
+    
+
+
     with open('./default_config.json', 'r') as f:
         default_config = json.load(f)
-        new_config = default_config.copy()
-        #setup the default with keys
-        for key in args_dic.keys():
-            new_config[key] = args_dic[key]
-        
-        
-        config_list.append(new_config)
+        name_count = 1
+        for lr,opt in itertools.product(lr_list, opt_list):
+            #creates copies of the dics to not interfere with other loops
+            new_config = default_config.copy()
+            input_copy = args_dic.copy()
+            #addes the products from the output
+            input_copy["learning_rate"] = lr
+            input_copy["optimizer_type"] = opt
+            input_copy["output_name"] = input_copy["output_name"] + "_" + str(name_count)
+            #setup the default with keys
+            for key in input_copy.keys():
+                new_config[key] = input_copy[key]
+            #adds the new config
+            config_list.append(new_config)
+            name_count += 1
 
 
 
@@ -77,7 +120,7 @@ def get_configs(imgFilepath, output_dir, logging_dir, configFilepath):
     for filename in json_list:
         with open(filename,'r') as f:
             new_config = json.load(f)
-            new_config['train_data_dir'] = imgFilepath
+            new_config['img_Filepath'] = imgFilepath
             new_config['output_dir'] = output_dir
             new_config['logging_dir'] = logging_dir
             config_list.append(new_config)
@@ -91,20 +134,19 @@ def lora_loop(prompt, config_list):
     ###THIS IS WHERE TO ADD THE CLIP AND GROUNDING DINO PARTS
     
     ###
-
     #run each lora training
     for new_config in config_list:
         print('\nStarted Lora Traning on ', new_config['output_name'], '...\n')
             
         popout_train_model(
         headless={'label':'False'},#0######
-        print_only={'label':'False'},#Change if you want to print comands in stead of running#
+        print_only={'label':'True'},#Make True Change if you want to print comands in stead of running#
         pretrained_model_name_or_path=new_config['pretrained_model_name_or_path'],
         v2=new_config['v2'],
         v_parameterization=new_config['v_parameterization'],
         sdxl='',
         logging_dir=new_config['logging_dir'],
-        train_data_dir=new_config['train_data_dir'], ##Need to test if file path exists
+        train_data_dir=new_config['img_Filepath'], ##Need to test if file path exists
         reg_data_dir=new_config['reg_data_dir'],
         output_dir=new_config['output_dir'],
         max_resolution=new_config['max_resolution'],
@@ -163,7 +205,7 @@ def lora_loop(prompt, config_list):
         v_pred_like_loss=new_config['v_pred_like_loss'],
         caption_dropout_every_n_epochs=new_config['caption_dropout_every_n_epochs'],
         caption_dropout_rate=new_config['caption_dropout_rate'],
-        optimizer=new_config['optimizer'],
+        optimizer=new_config['optimizer_type'],
         optimizer_args=new_config['optimizer_args'],
         lr_scheduler_args=new_config['lr_scheduler_args'],
         noise_offset_type=new_config['noise_offset_type'],
@@ -212,7 +254,7 @@ def lora_loop(prompt, config_list):
         max_timestep=new_config['max_timestep'],
         )
 
-###This function is from Koyass with a few edits to pop out the training 
+
 def popout_train_model(
     headless,
     print_only,
@@ -957,7 +999,14 @@ if __name__ == '__main__':
         help='Stopping place for learning rate'
     )
 
-    ##
+    ##Optimizer type
+    parser.add_argument(
+        '-opt',
+        '--optimizer_type',
+        type=str,
+        default="AdamW8bit",
+        help='Names of optimizers'
+    )
 
     """
     List of inputs to still go through
