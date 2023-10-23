@@ -1048,7 +1048,7 @@ if __name__ == '__main__':
         config_list = create_configs(vars(args))
 
     if len(config_list) < 1: 
-        raise Exception("There Were no Configs to use.")
+        raise Exception("There are no Configs to use")
     
     lora_loop(args.prompt, config_list)
 
