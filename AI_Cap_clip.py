@@ -1,4 +1,4 @@
-import clip
+import open_clip as clip
 import numpy as np
 import torch
 #from transformers import CLIPProcessor, CLIPModel
@@ -7,15 +7,14 @@ import os
 import numpy as np
 
 
-# Load the CLIP model and processor
-model, preprocess = clip.load("ViT-B/32")
-model.eval()
 
-input_resolution = model.visual.input_resolution
-context_length = model.context_length
-vocab_size = model.vocab_size
 
-def fun(text, ip, op, number_of_imgs):
+def subset_Images(text, ip, op, number_of_imgs):
+    # Load the CLIP model and processor
+    model, preprocess = clip.load("ViT-B/32")
+    model.eval()
+
+
     # text_descriptions = "a picture of a cat"
     text_tokens = clip.tokenize(text)
     t_dir = ip
@@ -40,7 +39,7 @@ def fun(text, ip, op, number_of_imgs):
 
 
     sorted_indices = np.argsort(similarity).tolist()
-
+    #check if the number of images wanted is larger than the list itself
     if len(sorted_indices) < number_of_imgs:
          number_of_imgs = len(sorted_indices)
 
@@ -65,4 +64,4 @@ def fun(text, ip, op, number_of_imgs):
 # txt = input("Enter text input: ")
 #input_folder = "animals"
 #output_folder = "output_images"
-#fun('a picture of a dog',input_folder,output_folder)
+#subset_Images('a picture of a dog',input_folder,output_folder)

@@ -2,6 +2,7 @@ import argparse
 import os
 import pathlib
 import itertools 
+from AI_Cap_clip import subset_Images
 
 import json
 import math
@@ -133,6 +134,8 @@ def get_configs(imgFilepath, output_dir, logging_dir, configFilepath):
 def lora_loop(prompt, config_list):
     ###THIS IS WHERE TO ADD THE CLIP AND GROUNDING DINO PARTS
     
+    
+    subset_Images(prompt, ip, op, number_of_imgs)
     ###
     #run each lora training
     for new_config in config_list:
