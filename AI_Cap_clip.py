@@ -1,11 +1,10 @@
-import open_clip as clip
+import clip
 import numpy as np
 import torch
 #from transformers import CLIPProcessor, CLIPModel
 from PIL import Image
 import os
 import numpy as np
-
 
 
 
@@ -19,6 +18,7 @@ def subset_Images(text, ip, op, number_of_imgs):
     text_tokens = clip.tokenize(text)
     t_dir = ip
     ims = []
+
 
     image_list = [os.path.join(t_dir, filename) for filename in os.listdir(t_dir) if filename.endswith(".png") or filename.endswith(".jpg")]
     for filename in image_list:
@@ -38,12 +38,11 @@ def subset_Images(text, ip, op, number_of_imgs):
     similarity = text_features.numpy() @ image_features.numpy().T
 
 
-    sorted_indices = np.argsort(similarity).tolist()
+    sorted_indices = np.argsort(similarity).tolist()[0]
     #check if the number of images wanted is larger than the list itself
     if len(sorted_indices) < number_of_imgs:
          number_of_imgs = len(sorted_indices)
-
-    tl = sorted_indices[0][-number_of_imgs:]
+    tl = sorted_indices[-number_of_imgs:]
 
     for filename in os.listdir(op):
             file_path = os.path.join(op, filename)
@@ -55,10 +54,10 @@ def subset_Images(text, ip, op, number_of_imgs):
         highest_similarity_image = Image.open(image_path).convert("RGB")
         save_folder = op
         os.makedirs(save_folder, exist_ok=True)
-        save_path = os.path.join(save_folder, image_path.split('/')[-1])
+        save_path = os.path.join(save_folder, image_path.split('\\')[-1])
         highest_similarity_image.save(save_path)
 
-        print("Images saved")
+    print(f"{len(tl)} Images saved")
 
 
 # txt = input("Enter text input: ")

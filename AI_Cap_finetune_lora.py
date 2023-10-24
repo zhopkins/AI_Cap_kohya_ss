@@ -131,12 +131,14 @@ def get_configs(imgFilepath, output_dir, logging_dir, configFilepath):
 
 
 
-def lora_loop(prompt, config_list):
+def lora_loop(prompt, number_of_subset, img_subset_output, config_list):
     ###THIS IS WHERE TO ADD THE CLIP AND GROUNDING DINO PARTS
     
-    
-    subset_Images(prompt, ip, op, number_of_imgs)
+
+
+    subset_Images(prompt, config_list[0]['img_Filepath'], img_subset_output, number_of_subset)
     ###
+
     #run each lora training
     for new_config in config_list:
         print('\nStarted Lora Traning on ', new_config['output_name'], '...\n')
@@ -945,7 +947,23 @@ if __name__ == '__main__':
         type=str,
         help='The file path too the folder of images'
     )
+    
+    
+    parser.add_argument(
+        '-n',
+        '--number_of_subset',
+        type=int,
+        default=5,
+        help='The number of subset images to take'
+    )
 
+    parser.add_argument(
+        '-si',
+        '--img_subset_output',
+        type=str,
+        help='The output dir for the subset of images from clip model'
+    )
+    
     parser.add_argument(
         '-o',
         '--output_dir',
@@ -1053,7 +1071,7 @@ if __name__ == '__main__':
     if len(config_list) < 1: 
         raise Exception("There are no Configs to use")
     
-    lora_loop(args.prompt, config_list)
+    lora_loop(args.prompt, args.number_of_subset, args.img_subset_output, config_list)
 
     
     
