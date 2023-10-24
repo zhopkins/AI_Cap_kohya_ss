@@ -1,5 +1,6 @@
 import argparse
 import os
+import shutil
 import pathlib
 import itertools 
 from AI_Cap_clip import subset_Images
@@ -131,13 +132,7 @@ def get_configs(imgFilepath, output_dir, logging_dir, configFilepath):
 
 
 
-def lora_loop(prompt, number_of_subset, img_subset_output, config_list):
-    ###THIS IS WHERE TO ADD THE CLIP AND GROUNDING DINO PARTS
-    
-
-
-    subset_Images(prompt, config_list[0]['img_Filepath'], img_subset_output, number_of_subset)
-    ###
+def lora_loop(config_list):
 
     #run each lora training
     for new_config in config_list:
@@ -1062,6 +1057,30 @@ if __name__ == '__main__':
     --noise_offset=0.0
     """
     args = parser.parse_args()
+    
+    #set up lora file path in image folder if not there
+    subset_Filepath = os.path.join(args.img_Filepath, f'lora\\img\\1_{args.output_name}')
+    os.makedirs(subset_Filepath, exist_ok=True)
+
+    #This sets up the images in the given output folder
+    print("Running Clip Model")
+    subset_Images(args.prompt, args.img_Filepath, subset_Filepath, args.number_of_subset)
+    #Checks if the input folder has captions
+    if any(file.endswith(".txt") for file in os.listdir(args.img_Filepath)):
+        subset_Names = os.listdir(subset_Filepath)
+        
+        txt_names = [(file.split('.')[0] + f'.txt') for file in subset_Names]
+        
+        for file in txt_names:
+            shutil.copy(os.path.join(args.img_Filepath, file), subset_Filepath)
+        
+        
+    else:
+        raise Exception("Not Implemented with not given captions")
+
+    args.img_Filepath = os.path.join(args.img_Filepath, f'lora\\img')
+
+    #Makes the dic list of all runs
     config_list = []
     if args.config_Filepath != None:
         config_list = get_configs(args.img_Filepath, args.output_dir, args.logging_dir, args.config_Filepath)
@@ -1071,7 +1090,7 @@ if __name__ == '__main__':
     if len(config_list) < 1: 
         raise Exception("There are no Configs to use")
     
-    lora_loop(args.prompt, args.number_of_subset, args.img_subset_output, config_list)
+    lora_loop(config_list)
 
     
     
