@@ -1,3 +1,27 @@
+# Capstone Additions
+
+Before running a few steps are need to run the .\AI_cap_finetune_lora.py script 
+
+1. First run the .\setup.bat from kohya_ss
+
+2. cd into AI_Cap_kohya_ss and run the virtual enviroment
+```
+.\venv\Scripts\activate.bat
+```
+
+3. run this command from the python venv
+```
+pip install git+https://github.com/openai/CLIP.git
+```
+
+Now you can run .\AI_Cap_finetune_lora.py from inside the venv Bellow is the example and some descriptions of the function
+
+python3 .\AI_Cap_finetune_lora.py --prompt str --img_Filepath "path\to\images" --number_of_subset int --img_subset_output "path\to\img\output" --output_dir "path\to\model\output" --logging_dir "path\to\logging\output" -lr int -lr_stop int -lr_step int
+
+
+
+
+# The rest of this is [from kohya_ss gihub](https://github.com/bmaltais/kohya_ss)
 # Kohya's GUI
 
 This repository mostly provides a Windows-focused Gradio GUI for [Kohya's Stable Diffusion trainers](https://github.com/kohya-ss/sd-scripts)... but support for Linux OS is also provided through community contributions. Macos is not great at the moment.
