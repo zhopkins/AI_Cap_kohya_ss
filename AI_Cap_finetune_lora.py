@@ -4,6 +4,7 @@ import shutil
 import pathlib
 import itertools 
 from AI_Cap_clip import subset_Images
+from blip_caption_gui import caption_images
 
 import json
 import math
@@ -990,6 +991,14 @@ if __name__ == '__main__':
         help='The prompt of the focus for the finetuning'
     )
 
+    parser.add_argument(
+        '-pre',
+        '--prefix',
+        type=str,
+        default='default',
+        help='The Prefix to add to captioning'
+    )
+
     ##Learning Rate Inputs
     parser.add_argument(
         '-lr',
@@ -1011,7 +1020,7 @@ if __name__ == '__main__':
         '-lr_step',
         '--learning_rate_step',
         type=float,
-        default=0,
+        default=1,
         help='Stopping place for learning rate'
     )
 
@@ -1073,10 +1082,11 @@ if __name__ == '__main__':
         
         for file in txt_names:
             shutil.copy(os.path.join(args.img_Filepath, file), subset_Filepath)
-        
-        
+    #runs the blip captioning
     else:
-        raise Exception("Not Implemented with not given captions")
+        #raise Exception("Not Implemented with not given captions")
+        #hard coded defaults from the 
+        caption_images(subset_Filepath, ".txt", 1, 1, .9, 75, 5, True, args.prefix, "")
 
     args.img_Filepath = os.path.join(args.img_Filepath, f'lora\\img')
 
