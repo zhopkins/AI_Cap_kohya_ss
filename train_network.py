@@ -12,6 +12,16 @@ import toml
 
 from tqdm import tqdm
 import torch
+
+try:
+    import intel_extension_for_pytorch as ipex
+
+    if torch.xpu.is_available():
+        from library.ipex import ipex_init
+
+        ipex_init()
+except Exception:
+    pass
 from accelerate.utils import set_seed
 from diffusers import DDPMScheduler
 from library import model_util
@@ -182,8 +192,8 @@ class NetworkTrainer:
 
         current_epoch = Value("i", 0)
         current_step = Value("i", 0)
-        ds_for_collater = train_dataset_group if args.max_data_loader_n_workers == 0 else None
-        collater = train_util.collater_class(current_epoch, current_step, ds_for_collater)
+        ds_for_collator = train_dataset_group if args.max_data_loader_n_workers == 0 else None
+        collator = train_util.collator_class(current_epoch, current_step, ds_for_collator)
 
         if args.debug_dataset:
             train_util.debug_dataset(train_dataset_group)
@@ -273,7 +283,10 @@ class NetworkTrainer:
         if args.dim_from_weights:
             network, _ = network_module.create_network_from_weights(1, args.network_weights, vae, text_encoder, unet, **net_kwargs)
         else:
-            # LyCORIS will work with this...
+            if "dropout" not in net_kwargs:
+                # workaround for LyCORIS (;^ω^)
+                net_kwargs["dropout"] = args.network_dropout
+
             network = network_module.create_network(
                 1.0,
                 args.network_dim,
@@ -332,7 +345,7 @@ class NetworkTrainer:
             train_dataset_group,
             batch_size=1,
             shuffle=True,
-            collate_fn=collater,
+            collate_fn=collator,
             num_workers=n_workers,
             persistent_workers=args.persistent_data_loader_workers,
         )
@@ -419,7 +432,12 @@ class NetworkTrainer:
                 t_enc.train()
 
                 # set top parameter requires_grad = True for gradient checkpointing works
-                t_enc.text_model.embeddings.requires_grad_(True)
+                if train_text_encoder:
+                    t_enc.text_model.embeddings.requires_grad_(True)
+
+            # set top parameter requires_grad = True for gradient checkpointing works
+            if not train_text_encoder:  # train U-Net only
+                unet.parameters().__next__().requires_grad_(True)
         else:
             unet.eval()
             for t_enc in text_encoders:
@@ -509,6 +527,7 @@ class NetworkTrainer:
             "ss_prior_loss_weight": args.prior_loss_weight,
             "ss_min_snr_gamma": args.min_snr_gamma,
             "ss_scale_weight_norms": args.scale_weight_norms,
+            "ss_ip_noise_gamma": args.ip_noise_gamma,
         }
 
         if use_user_config:
@@ -938,7 +957,7 @@ def setup_parser() -> argparse.ArgumentParser:
         help="Drops neurons out of training every step (0 or None is default behavior (no dropout), 1 would drop all neurons) / 訓練時に毎ステップでニューロンをdropする（0またはNoneはdropoutなし、1は全ニューロンをdropout）",
     )
     parser.add_argument(
-        "--network_args", type=str, default=None, nargs="*", help="additional argmuments for network (key=value) / ネットワークへの追加の引数"
+        "--network_args", type=str, default=None, nargs="*", help="additional arguments for network (key=value) / ネットワークへの追加の引数"
     )
     parser.add_argument("--network_train_unet_only", action="store_true", help="only training U-Net part / U-Net関連部分のみ学習する")
     parser.add_argument(

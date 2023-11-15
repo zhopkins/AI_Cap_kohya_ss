@@ -41,8 +41,8 @@ V1_MODELS = [
 
 # define a list of substrings to search for SDXL base models
 SDXL_MODELS = [
-    'stabilityai/stable-diffusion-xl-base-0.9',
-    'stabilityai/stable-diffusion-xl-refiner-0.9',
+    'stabilityai/stable-diffusion-xl-base-1.0',
+    'stabilityai/stable-diffusion-xl-refiner-1.0',
 ]
 
 # define a list of substrings to search for
@@ -881,6 +881,12 @@ def run_cmd_advanced_training(**kwargs):
     wandb_api_key = kwargs.get('wandb_api_key', '')
     if wandb_api_key:
         run_cmd += f' --wandb_api_key="{wandb_api_key}"'
+        
+    vae = kwargs.get(
+        'vae'
+    )
+    if vae:
+        run_cmd += ' --vae="{vae}"'
 
     return run_cmd
 

@@ -41,7 +41,7 @@ from library.dreambooth_folder_creation_gui import (
 from library.dataset_balancing_gui import gradio_dataset_balancing_tab
 
 from library.custom_logging import setup_logging
-from localization_ext import add_javascript
+from library.localization_ext import add_javascript
 
 # Set up logging
 log = setup_logging()
@@ -170,6 +170,7 @@ def save_configuration(
     full_bf16,
     min_timestep,
     max_timestep,
+    vae
 ):
     # Get list of function parameters and values
     parameters = list(locals().items())
@@ -323,6 +324,7 @@ def open_configuration(
     min_timestep,
     max_timestep,
     training_preset,
+    vae
 ):
     # Get list of function parameters and values
     parameters = list(locals().items())
@@ -496,6 +498,7 @@ def train_model(
     full_bf16,
     min_timestep,
     max_timestep,
+    vae
 ):
     # Get list of function parameters and values
     parameters = list(locals().items())
@@ -735,7 +738,7 @@ def train_model(
             )
             return
         run_cmd += f' --network_module=lycoris.kohya'
-        run_cmd += f' --network_args "conv_dim={conv_dim}" "conv_alpha={conv_alpha}" "algo=lora"'
+        run_cmd += f' --network_args "conv_dim={conv_dim}" "conv_alpha={conv_alpha}" "algo=locon"'
 
     if LoRA_type == 'LyCORIS/LoHa':
         try:
@@ -1001,6 +1004,7 @@ def train_model(
         scale_v_pred_loss_like_noise_pred=scale_v_pred_loss_like_noise_pred,
         min_timestep=min_timestep,
         max_timestep=max_timestep,
+        vae=vae,
     )
 
     run_cmd += run_cmd_sample(
@@ -1538,7 +1542,7 @@ def lora_tab(
 
         button_start_tensorboard.click(
             start_tensorboard,
-            inputs=folders.logging_dir,
+            inputs=[dummy_headless, folders.logging_dir],
             show_progress=False,
         )
 
@@ -1658,6 +1662,7 @@ def lora_tab(
             advanced_training.full_bf16,
             advanced_training.min_timestep,
             advanced_training.max_timestep,
+            advanced_training.vae,
         ]
 
         config.button_open_config.click(
