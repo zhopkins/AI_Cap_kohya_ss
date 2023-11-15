@@ -114,7 +114,7 @@ def lora_loop(config_list):
         pretrained_model_name_or_path=new_config['pretrained_model_name_or_path'],
         v2=new_config['v2'],
         v_parameterization=new_config['v_parameterization'],
-        sdxl='',
+        sdxl=new_config['sdxl'],
         logging_dir=new_config['logging_dir'],
         train_data_dir=new_config['img_Filepath'], ##Need to test if file path exists
         reg_data_dir=new_config['reg_data_dir'],
@@ -222,6 +222,7 @@ def lora_loop(config_list):
         full_bf16=new_config['full_bf16'],
         min_timestep=new_config['min_timestep'],
         max_timestep=new_config['max_timestep'],
+        vae = new_config['vae']
         )
 
 if __name__ == '__main__':
@@ -366,7 +367,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     #set up lora file path in image folder if not there
-    subset_Filepath = os.path.join(args.img_Filepath, f'lora\\img\\1_{args.output_name}')
+    subset_Filepath = os.path.join(args.img_Filepath, f'lora/img/1_{args.output_name}')
     os.makedirs(subset_Filepath, exist_ok=True)
 
     #This sets up the images in the given output folder
@@ -385,7 +386,7 @@ if __name__ == '__main__':
         #hard coded defaults from the 
         caption_images(subset_Filepath, ".txt", 1, 1, .9, 75, 5, True, args.prefix, "")
 
-    args.img_Filepath = os.path.join(args.img_Filepath, f'lora\\img')
+    args.img_Filepath = os.path.join(args.img_Filepath, f'lora/img')
 
     #Makes the dic list of all runs
     config_list = []
