@@ -373,6 +373,10 @@ if __name__ == '__main__':
     #This sets up the images in the given output folder
     print("Running Clip Model")
     subset_Images(args.prompt, args.img_Filepath, subset_Filepath, args.number_of_subset)
+    ###GROUNDING DINO
+    
+    
+    ###
     #Checks if the input folder has captions
     if any(file.endswith(".txt") for file in os.listdir(args.img_Filepath)):
         subset_Names = os.listdir(subset_Filepath)
