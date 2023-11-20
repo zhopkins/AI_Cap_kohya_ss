@@ -35,6 +35,7 @@ def create_configs(args_dic):
     #this is for learning Rate
     lr_list = floating_point_range(args_dic["learning_rate"], args_dic["learning_rate_stop"], args_dic["learning_rate_step"])
     #This is for Optimizer
+    #if the optimizer is in this list it is in kohya_ss's optimizers
     opt_choices=[
                     'AdamW',
                     'AdamW8bit',
@@ -69,7 +70,8 @@ def create_configs(args_dic):
             #addes the products from the output
             input_copy["learning_rate"] = lr
             input_copy["optimizer_type"] = opt
-            input_copy["output_name"] = input_copy["output_name"] + "_" + str(name_count)
+            input_copy["output_name"] = args_dic["output_name"] + "_" + str(name_count)
+
             #setup the default with keys
             for key in input_copy.keys():
                 new_config[key] = input_copy[key]
@@ -110,7 +112,7 @@ def lora_loop(config_list):
             
         train_model(
         headless={'label':'False'},#0######
-        print_only={'label':'False'},#Make True Change if you want to print comands in stead of running#
+        print_only={'label':'True'},#Make True Change if you want to print comands in stead of running#
         pretrained_model_name_or_path=new_config['pretrained_model_name_or_path'],
         v2=new_config['v2'],
         v_parameterization=new_config['v_parameterization'],
@@ -124,7 +126,7 @@ def lora_loop(config_list):
         lr_scheduler=new_config['lr_scheduler'],
         lr_warmup=new_config['lr_warmup'],
         train_batch_size=new_config['train_batch_size'],
-        epoch=new_config['epoch'],
+        epoch=new_config['Epoch'],
         save_every_n_epochs=new_config['save_every_n_epochs'],
         mixed_precision=new_config['mixed_precision'],
         save_precision=new_config['save_precision'],
@@ -281,6 +283,7 @@ if __name__ == '__main__':
         default=None,
         help='The file path too the folder of config files'
     )
+    
 
     #Name for the models
     parser.add_argument(
@@ -297,6 +300,14 @@ if __name__ == '__main__':
         type=str,
         default='default',
         help='The Prefix to add to captioning'
+    )
+
+    parser.add_argument(
+        '-epo',
+        '--Epoch',
+        type=int,
+        default=1,
+        help='The number of epochs the model will train for'
     )
 
     ##Learning Rate Inputs
@@ -332,6 +343,9 @@ if __name__ == '__main__':
         default="AdamW8bit",
         help='Names of optimizers'
     )
+
+    #Grounding Dino input parameters
+    
 
     """
     List of inputs to still go through
@@ -373,7 +387,11 @@ if __name__ == '__main__':
 
     #This sets up the images in the given output folder
     print("Running Clip Model")
+    ###Add if statment for checking if we have an image prompt as well
     subset_Images(args.prompt, args.img_Filepath, subset_Filepath, args.number_of_subset)
+        
+
+    ###
     ###GROUNDING DINO
     
     
