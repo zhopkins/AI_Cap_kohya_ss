@@ -406,7 +406,7 @@ if __name__ == '__main__':
             shutil.copy(os.path.join(args.img_Filepath, file), subset_Filepath)
     #runs the blip captioning
     else:
-        #hard coded defaults from the 
+        #hard coded defaults from koya for blip captioning
         caption_images(subset_Filepath, ".txt", 1, 1, .9, 75, 5, True, args.prefix, "")
 
     args.img_Filepath = os.path.join(args.img_Filepath, f'lora/img')
