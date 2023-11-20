@@ -225,6 +225,7 @@ def lora_loop(config_list):
         vae = new_config['vae']
         )
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     #input aguments for comand line functions

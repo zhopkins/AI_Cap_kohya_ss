@@ -1041,6 +1041,13 @@ def train_model(
         log.info(run_cmd)
         # Run the command
         executor.execute_command(run_cmd=run_cmd)
+        ###AI CAPSTONE ADDIDTIONS
+        #Waits for the current process to stop before         
+        status = executor.process.wait()
+        #also prints out errors if they happened
+        _, errs = executor.process.communicate()
+        print("The Training exit code:", errs)
+        ###
 
         # # check if output_dir/last is a folder... therefore it is a diffuser model
         # last_dir = pathlib.Path(f'{output_dir}/{output_name}')
