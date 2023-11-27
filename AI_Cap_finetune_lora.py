@@ -3,12 +3,13 @@ import os
 import shutil
 import pathlib
 import itertools 
-from AI_Cap_clip import subset_Images
+from AI_Cap_clip import prompt2Img_subset,img2img_subset
 from library.blip_caption_gui import caption_images
 from lora_gui import train_model
 from library.custom_logging import setup_logging
 from library.class_command_executor import CommandExecutor
 import json
+from GroundingDINO.ai_cropping import 
 
 # Set up logging
 log = setup_logging()
@@ -35,7 +36,8 @@ def create_configs(args_dic):
     #this is for learning Rate
     lr_list = floating_point_range(args_dic["learning_rate"], args_dic["learning_rate_stop"], args_dic["learning_rate_step"])
     #This is for Optimizer
-    #if the optimizer is in this list it is in kohya_ss's optimizers
+    #if the optimizer is in this list it is in kohya_ss's optimizers    
+    #Should find a way to not hard code but no easy way found
     opt_choices=[
                     'AdamW',
                     'AdamW8bit',
@@ -107,12 +109,13 @@ def get_configs(imgFilepath, output_dir, logging_dir, configFilepath):
 def lora_loop(config_list):
 
     #run each lora training
+    print(f"There are {len(config_list)} models to train.")
     for new_config in config_list:
         print('\nStarted Lora Traning on ', new_config['output_name'], '...\n')
             
         train_model(
         headless={'label':'False'},#0######
-        print_only={'label':'True'},#Make True Change if you want to print comands in stead of running#
+        print_only={'label':'False'},#Make True Change if you want to print comands in stead of running#
         pretrained_model_name_or_path=new_config['pretrained_model_name_or_path'],
         v2=new_config['v2'],
         v_parameterization=new_config['v_parameterization'],
@@ -385,17 +388,38 @@ if __name__ == '__main__':
     subset_Filepath = os.path.join(args.img_Filepath, f'lora/img/1_{args.output_name}')
     os.makedirs(subset_Filepath, exist_ok=True)
 
+    #checks to see if any files are in the output folder
+    if len(os.listdir(args.output_dir))>0:
+        #asks the user for input
+        user_input = input(f"Files are already located in the output folder given: {args.output_dir}. \nCan this program REMOVE all files located there?(Y/n)\n")    
+        #if the input isn't what we are expecting then ask again'
+        while not((user_input == 'Y') or (user_input == 'n')): 
+            user_input = input(f"Incorrect input. Files are already located in the output folder given: {args.output_dir}. \nCan this program REMOVE all files located there?(Y/n)\n")    
+        #lastly if the user said yes
+        if user_input == 'Y':
+            #this removes all the files from the output filepath
+            for filename in os.listdir(args.output_dir):
+                file_path = os.path.join(args.output_dir, filename)
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+        else:
+            #raises an exception
+            raise Exception("The output file needs to be empty.")
+
+
     #This sets up the images in the given output folder
     print("Running Clip Model")
     ###Add if statment for checking if we have an image prompt as well
-    subset_Images(args.prompt, args.img_Filepath, subset_Filepath, args.number_of_subset)
+    prompt2Img_subset(args.prompt, args.img_Filepath, subset_Filepath, args.number_of_subset)
         
 
     ###
     ###GROUNDING DINO
     
+
     
     ###
+
     #Checks if the input folder has captions
     if any(file.endswith(".txt") for file in os.listdir(args.img_Filepath)):
         subset_Names = os.listdir(subset_Filepath)
@@ -419,8 +443,8 @@ if __name__ == '__main__':
         config_list = create_configs(vars(args))
 
     if len(config_list) < 1: 
-        raise Exception("There are no Configs to use")
-    
+        raise Exception("There are no Configs to use")    
+
     lora_loop(config_list)
 
     

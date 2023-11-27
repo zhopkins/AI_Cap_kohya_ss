@@ -8,7 +8,7 @@ import numpy as np
 
 
 
-def subset_Images(text, ip, op, number_of_imgs):
+def prompt2Img_subset(text, ip, op, number_of_imgs):
     #checks the device avaiable 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # Load the CLIP model and processor
@@ -51,7 +51,8 @@ def subset_Images(text, ip, op, number_of_imgs):
     if len(sorted_indices) < number_of_imgs:
          number_of_imgs = len(sorted_indices)
     tl = sorted_indices[-number_of_imgs:]
-
+    
+    #removes all files from op filepath
     for filename in os.listdir(op):
             file_path = os.path.join(op, filename)
             if os.path.isfile(file_path):
@@ -68,7 +69,52 @@ def subset_Images(text, ip, op, number_of_imgs):
     print(f"{len(tl)} Images saved")
 
 
-# txt = input("Enter text input: ")
-#input_folder = "animals"
-#output_folder = "output_images"
-#subset_Images('a picture of a dog',input_folder,output_folder)
+def img2img_subset(image_path,ip,op,numer_of_images):
+    
+    model, preprocess = clip.load("ViT-B/32")
+    model.eval()
+    t_dir = ip
+    ims = []
+
+    image_list = [os.path.join(t_dir, filename) for filename in os.listdir(t_dir) if filename.endswith(".png") or filename.endswith(".jpg")]
+    for filename in image_list:
+        image = Image.open(filename).convert("RGB")
+        ims.append(preprocess(image))
+
+
+
+    image_input = torch.tensor(np.stack(ims))
+
+    image_prompt = Image.open(image_path).convert("RGB")
+    image_prompt_input = torch.tensor(np.stack([preprocess(image_prompt)]))
+    
+
+
+    with torch.no_grad():
+        image_features = model.encode_image(image_input).float()
+        image_prompt_features = model.encode_image(image_prompt_input).float()
+
+    image_features /= image_features.norm(dim=-1, keepdim=True)
+    image_prompt_features /= image_prompt_features.norm(dim=-1, keepdim=True)
+    similarity = image_prompt_features.cpu().numpy() @ image_features.cpu().numpy().T
+
+
+    sorted_indices = np.argsort(similarity)
+    top_5_indices = sorted_indices.tolist()
+    tl = top_5_indices[0][-5:]
+
+    for filename in os.listdir(op):
+            file_path = os.path.join(op, filename)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+
+    for i in tl:
+        image_path = image_list[i]
+        highest_similarity_image = Image.open(image_path).convert("RGB")
+        save_folder = op
+        
+        os.makedirs(save_folder, exist_ok=True)
+        save_path = os.path.join(save_folder, image_path.split('/')[-1])
+        highest_similarity_image.save(save_path)
+
+        print("Images saved")
