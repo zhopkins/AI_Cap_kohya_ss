@@ -9,7 +9,7 @@ from lora_gui import train_model
 from library.custom_logging import setup_logging
 from library.class_command_executor import CommandExecutor
 import json
-from GroundingDINO.ai_cropping import 
+#from GroundingDINO.ai_cropping import 
 
 # Set up logging
 log = setup_logging()
@@ -241,6 +241,14 @@ if __name__ == '__main__':
         help='The prompt of the focus for the finetuning'
     )
 
+    parser.add_argument(
+        '-Ip',
+        '--img_prompt',
+        type=str,
+        default='',
+        help='The file path to an image to be used in the clip image search'
+    )
+
     #where the images are stored (has to be in the "lora\img" structure)
     parser.add_argument(
         '-i',
@@ -409,15 +417,18 @@ if __name__ == '__main__':
 
     #This sets up the images in the given output folder
     print("Running Clip Model")
-    ###Add if statment for checking if we have an image prompt as well
-    prompt2Img_subset(args.prompt, args.img_Filepath, subset_Filepath, args.number_of_subset)
+    ###checks if an image was given as a prompt
+    if args.img_prompt != '':
+        img2img_subset(args.img_prompt, args.img_Filepath, subset_Filepath, args.number_of_subset)
+    else:    
+        prompt2Img_subset(args.prompt, args.img_Filepath, subset_Filepath, args.number_of_subset)
         
 
     ###
     ###GROUNDING DINO
     
 
-    
+    ###
     ###
 
     #Checks if the input folder has captions

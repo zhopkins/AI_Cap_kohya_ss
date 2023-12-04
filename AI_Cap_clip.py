@@ -69,10 +69,16 @@ def prompt2Img_subset(text, ip, op, number_of_imgs):
     print(f"{len(tl)} Images saved")
 
 
-def img2img_subset(image_path,ip,op,numer_of_images):
-    
+def img2img_subset(image_path,ip,op,number_of_imgs):
+    #checks the device avaiable 
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    # Load the CLIP model and processor
     model, preprocess = clip.load("ViT-B/32")
+    model.to(device)
     model.eval()
+
+
     t_dir = ip
     ims = []
 
@@ -84,10 +90,13 @@ def img2img_subset(image_path,ip,op,numer_of_images):
 
 
     image_input = torch.tensor(np.stack(ims))
+    image_input = image_input.to(device)
 
     image_prompt = Image.open(image_path).convert("RGB")
-    image_prompt_input = torch.tensor(np.stack([preprocess(image_prompt)]))
     
+
+    image_prompt_input = torch.tensor(np.stack([preprocess(image_prompt)]))
+    image_prompt_input = image_prompt_input.to(device)
 
 
     with torch.no_grad():
@@ -99,15 +108,19 @@ def img2img_subset(image_path,ip,op,numer_of_images):
     similarity = image_prompt_features.cpu().numpy() @ image_features.cpu().numpy().T
 
 
-    sorted_indices = np.argsort(similarity)
-    top_5_indices = sorted_indices.tolist()
-    tl = top_5_indices[0][-5:]
+    
+    sorted_indices = np.argsort(similarity).tolist()[0]
+    print(sorted_indices)
+    if len(sorted_indices) < number_of_imgs:
+         number_of_imgs = len(sorted_indices)
+    tl = sorted_indices[-number_of_imgs:]
 
+    
     for filename in os.listdir(op):
             file_path = os.path.join(op, filename)
             if os.path.isfile(file_path):
                 os.remove(file_path)
-
+    
     for i in tl:
         image_path = image_list[i]
         highest_similarity_image = Image.open(image_path).convert("RGB")
@@ -117,4 +130,4 @@ def img2img_subset(image_path,ip,op,numer_of_images):
         save_path = os.path.join(save_folder, image_path.split('/')[-1])
         highest_similarity_image.save(save_path)
 
-        print("Images saved")
+    print(f"{len(tl)} Images saved")
