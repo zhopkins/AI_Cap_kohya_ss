@@ -110,7 +110,6 @@ def img2img_subset(image_path,ip,op,number_of_imgs):
 
     
     sorted_indices = np.argsort(similarity).tolist()[0]
-    print(sorted_indices)
     if len(sorted_indices) < number_of_imgs:
          number_of_imgs = len(sorted_indices)
     tl = sorted_indices[-number_of_imgs:]

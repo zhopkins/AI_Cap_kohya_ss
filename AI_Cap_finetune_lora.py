@@ -294,7 +294,6 @@ if __name__ == '__main__':
         default=None,
         help='The file path too the folder of config files'
     )
-    
 
     #Name for the models
     parser.add_argument(
@@ -304,15 +303,73 @@ if __name__ == '__main__':
         default='New_model',
         help='The prompt of the focus for the finetuning'
     )
+    
+    #the captioning inputs
+    parser.add_argument(
+        '-b_size',
+        '--batch_size',
+        type=int,
+        default=1,
+        help='The batch size on the blip captioning'
+    )
+
+    parser.add_argument(
+        '-n_beams',
+        '--num_beams',
+        type=int,
+        default=1,
+        help='The number of beams for the blip captioning'
+    )
+
+    parser.add_argument(
+        '-tp',
+        '--top_p',
+        type=float,
+        default=.9,
+        help='The top p values for blip captioning: [0,1]'
+    )
+
+    parser.add_argument(
+        '-max_len',
+        '--max_length',
+        type=int,
+        default=75,
+        help='The max lengths of captions for blip captioning'
+    )
+
+    parser.add_argument(
+        '-min_len',
+        '--min_length',
+        type=int,
+        default=5,
+        help='The min lengths of captions for blip captioning'
+    )
+
+    parser.add_argument(
+        '-bs',
+        '--beam_search',
+        type=bool,
+        default=True,
+        help='Boolean for wanting to use beam_search for blip captioning'
+    )
 
     parser.add_argument(
         '-pre',
         '--prefix',
         type=str,
-        default='default',
-        help='The Prefix to add to captioning'
+        default='default123',
+        help='The Prefix to add to the blip captioning'
+    )
+    
+    parser.add_argument(
+        '-post',
+        '--postfix',
+        type=str,
+        default='',
+        help='The Post fix to add to the blip captioning'
     )
 
+    #how manny epochs to train on
     parser.add_argument(
         '-epo',
         '--Epoch',
@@ -442,7 +499,7 @@ if __name__ == '__main__':
     #runs the blip captioning
     else:
         #hard coded defaults from koya for blip captioning
-        caption_images(subset_Filepath, ".txt", 1, 1, .9, 75, 5, True, args.prefix, "")
+        caption_images(subset_Filepath, ".txt", args.batch_size, args.num_beams, args.top_p, args.max_length, args.min_length, args.beam_search, args.prefix, args.postfix)
 
     args.img_Filepath = os.path.join(args.img_Filepath, f'lora/img')
 
