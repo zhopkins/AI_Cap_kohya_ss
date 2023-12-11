@@ -25,12 +25,12 @@ def prompt2Img_subset(text, ip, op, number_of_imgs):
     ims = []
 
 
-    image_list = [os.path.join(t_dir, filename) for filename in os.listdir(t_dir) if filename.endswith(".png") or filename.endswith(".jpg")]
+    image_list = [os.path.join(t_dir, filename) for filename in os.listdir(t_dir) if filename.endswith(".png") or filename.endswith(".jpg") or filename.endswith("jpeg")]
     for filename in image_list:
         image = Image.open(filename).convert("RGB")
         ims.append(preprocess(image))
 
-
+    print(len(ims))
     image_input = torch.tensor(np.stack(ims))
     image_input = image_input.to(device)
     with torch.no_grad():
@@ -82,7 +82,7 @@ def img2img_subset(image_path,ip,op,number_of_imgs):
     t_dir = ip
     ims = []
 
-    image_list = [os.path.join(t_dir, filename) for filename in os.listdir(t_dir) if filename.endswith(".png") or filename.endswith(".jpg")]
+    image_list = [os.path.join(t_dir, filename) for filename in os.listdir(t_dir) if filename.endswith(".png") or filename.endswith(".jpg") or filename.endswith("jpeg")]
     for filename in image_list:
         image = Image.open(filename).convert("RGB")
         ims.append(preprocess(image))
