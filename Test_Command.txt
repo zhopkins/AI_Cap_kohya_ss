@@ -1,0 +1,26 @@
+to activate venv - source venv/bin/activate
+
+Below is a stating command to test this works 
+
+#testing with jojo's dataset
+
+python3 AI_Cap_finetune_lora.py --prompt "People Dancing" --img_Filepath "/file/path" --number_of_subset 20 --output_dir "/file/path" --logging_dir "/file/path" --Epoch 5 --output_name "JoJo_Models" --optimizer_type "AdamW, Lion"
+
+
+#testing with jojo's dataset with image prompt
+
+python3 AI_Cap_finetune_lora.py --prompt "People Dancing" --img_prompt "/file/path" --img_Filepath "/file/path" --number_of_subset 20 --output_dir "/file/path" --logging_dir "/file/path" --Epoch 5 --output_name "JoJo_Models" --optimizer_type "AdamW, Lion"
+
+
+#Testing with the animal dataset
+
+python3 AI_Cap_finetune_lora.py --prompt "Colorful Birds" --img_Filepath "/file/path" --number_of_subset 10 --output_dir "/file/path" --logging_dir "/file/path" --prefix "color_bird_123" --Epoch 5 --output_name "animal_model" --optimizer_type "AdamW, Lion"
+
+#testing with animal dataset and using image prompt
+python3 AI_Cap_finetune_lora.py --prompt "Black Bear" --batch_size 2 --num_beams 3 --top_p .8 --max_length 100 --min_length 2 --beam_search True --img_prompt "/file/path" --img_Filepath "/file/path" --number_of_subset 10 --output_dir "/file/path" --logging_dir "/file/path" --prefix "BlackBear123" --Epoch 5 --output_name "animal_model" --optimizer_type "AdamW, Lion"
+
+#Testing each of the optimizers for which ones work
+
+python3 AI_Cap_finetune_lora.py --prompt "People Dancing" --img_Filepath "/file/path" --number_of_subset 20 --output_dir "/file/path" --logging_dir "/file/path" --Epoch 1 --output_name "JoJo_Models" --optimizer_type "AdamW, AdamW8bit, Adafactor, DAdaptation, DAdaptAdaGrad, DAdaptAdam, DAdaptAdan, DAdaptAdanIP,DAdaptAdamPreprint,DAdaptLion,DAdaptSGD,Lion,Lion8bit,PagedAdamW8bit,PagedLion8bit,Prodigy,SGDNesterov,SGDNesterov8bit"
+
+List of optimizers that didn't work - 16, 11, 10, 9, 6, 5, 4, 3,

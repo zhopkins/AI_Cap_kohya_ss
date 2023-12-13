@@ -409,44 +409,9 @@ if __name__ == '__main__':
         '--optimizer_type',
         type=str,
         default="AdamW8bit",
-        help='Names of optimizers'
+        help='the list of optimizers to use. Inputed as one line separated by "," Ex: AdamW8bit, Adafactor'
     )
 
-    #Grounding Dino input parameters
-    
-
-    """
-    List of inputs to still go through
-    --enable_bucket 
-    --min_bucket_reso=256
-    --max_bucket_reso=2048
-    --pretrained_model_name_or_path="runwayml/stable-diffusion-v1-5"
-    DONE--train_data_dir="G:/AICapstone/test_files/jojo_stone_ocean_40_imgs/lora/img/sample"
-    TODO--resolution="512,512" 
-    DONE--output_dir="G:/AICapstone/test_files/jojo_stone_ocean_40_imgs/lora/img" 
-    --network_alpha="1" 
-    --save_model_as=safetensors 
-    --network_module=networks.lora 
-    TODO--text_encoder_lr=5e-05 
-    TODO--unet_lr=0.0001 
-    --network_dim=8 
-    DONE--output_name="last" 
-    --lr_scheduler_num_cycles="1" 
-    --no_half_vae 
-    DONE --learning_rate="0.0001" 
-    TODO--lr_scheduler="cosine" 
-    --train_batch_size="1" 
-    --save_every_n_epochs="1" 
-    --mixed_precision="fp16" 
-    --save_precision="fp16" 
-    --cache_latents 
-    DONE--optimizer_type="AdamW8bit" 
-    --max_data_loader_n_workers="0" 
-    --bucket_reso_steps=64 
-    --xformers 
-    --bucket_no_upscale 
-    --noise_offset=0.0
-    """
     args = parser.parse_args()
     
     #set up lora file path in image folder if not there
