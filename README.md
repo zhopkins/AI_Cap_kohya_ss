@@ -104,11 +104,11 @@ optimizer_type - (string)(default="AdamW8bit") the list of optimizers to use. In
 
 ## Clip Subset Code
 
-Overview :
+### Overview :
 This project leverages the CLIP (Contrastive Language-Image Pre-training) model to perform image retrieval based on a query image, text input, or both. Given a dataset of images, the model identifies and retrieves the most similar images to the provided query.
 
 
-Requirements :
+### Requirements :
 
 numpy
 torch
@@ -119,6 +119,7 @@ torchvision
 matplotlib
 git+https://github.com/openai/CLIP.git
 
+### Functions :
 
 prompt2Img_subset:
 
@@ -131,6 +132,37 @@ This method is used to retrieve most similar images for a image input. It takes 
 
 ## Grounding Dino Bluring and Cropping Code
 
+### Overview
+Grounding DINO Image Annotation is an academic capstone project focused on utilizing the Grounding DINO model for image annotation. The project aims to explore the capabilities of the model in localizing and annotating objects within images based on natural language prompts.
+
+### Installation
+To get started with the Grounding DINO Image Annotation project, follow the steps below:
+bashCopy code
+git clone https://github.com/IDEA-Research/GroundingDINO.git cd GroundingDINO pip install -e . pip install diffusers transformers accelerate scipy safetensors 
+Please ensure that you have the required dependencies installed before proceeding.
+
+### Usage
+#### Cropping Images
+To use the image cropping functionality, you can utilize the cropping function provided in the code. Here's an example:
+pythonCopy code
+```
+from image_processor import cropping 
+local_image_path = "path/to/your/image.jpg" 
+cropped_images, blurred_image = cropping(local_image_path) 
+```
+
+This will return a list of cropped images and a blurred image highlighting the specified regions.
+
+### Model Training
+The model used in this project is the Grounding DINO model pre-trained on a specific checkpoint. You can load the model using the ```load_model_hf``` function. Example:
+
+```
+ckpt_repo_id = "ShilongLiu/GroundingDINO" 
+ckpt_filename = "groundingdino_swinb_cogcoor.pth" 
+ckpt_config_filename = "GroundingDINO_SwinB.cfg.py" 
+groundingdino_model = load_model_hf(ckpt_repo_id, ckpt_filename, ckpt_config_filename) 
+```
+Ensure you have the required checkpoint files available for loading.
 
 
 # Other Repos we used
